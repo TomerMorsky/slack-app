@@ -1,9 +1,12 @@
+from dotenv import load_dotenv
 from pydantic import BaseModel
+
+load_dotenv()
 
 
 class SlackConfig(BaseModel):
-    slack_bot_token: str
-    slack_app_token: str
+    bot_token: str
+    app_token: str
 
 
 class OpenAIConfig(BaseModel):

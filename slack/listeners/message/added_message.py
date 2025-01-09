@@ -2,12 +2,14 @@ from typing import List, Dict
 
 from slack_bolt import App
 
+from llm_service.llm_client import LLMClient
 from slack.listeners.listenable import Listenable
 
 
 class AddedMessage(Listenable):
 
-    def __init__(self):
+    def __init__(self, llm_client: LLMClient):
+        self.llm_client = llm_client
         self.messages: List[Dict[str, str]] = [
             {
                 "role": "system",
@@ -15,27 +17,15 @@ class AddedMessage(Listenable):
             }
         ]
 
-    @staticmethod
-    def added_message(message, say):
+    def added_message(self, message, say):
         if message:
-            # message.append(
-            #     {"role": "user", "content": message["text"]},
-            # )
-            # response = llm_client.send_message_request(message)
-            # response_message = response.content
-            #
-            # message.append({"role": "assistant"})
+            self.messages.append(
+                {"role": "user", "content": message["text"]},
+            )
+            response = self.llm_client.send_message_request(self.messages)
 
-            #     if message:
-            #         # message.append(
-            #         #     {"role": "user", "content": message["text"]},
-            #         # )
-            #         # response = llm_client.send_message_request(message)
-            #         # response_message = response.content
-            #         #
-            #         # message.append({"role": "assistant"})
-            #         say("Your message is: " + message["text"] + " your reply is: " + "response_message")
-            say("Your message is: " + message["text"] + " your reply is: " + "response_message")
+            # self.messages.append({"role": "assistant"}) # TODO: add the assistant answer - response.content
+            say(response.content)
 
     def listen(self, app: App):
         app.message()(self.added_message)
