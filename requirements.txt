@@ -2,3 +2,4 @@ slack_bolt
 openai
 pydantic
 python-dotenv
+pymongo
