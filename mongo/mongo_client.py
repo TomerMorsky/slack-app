@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, Optional
 
 from pymongo import MongoClient
 
@@ -15,14 +15,17 @@ class MongoDBClient:
         self.db = self.client[db_name]
         self.collection = self.db[collection_name]
 
-    def get_user_chat(self, user_id: str) -> Chat:
+    def get_user_chat(self, user_id: str) -> Optional[Chat]:
         query = {"user": user_id}
-        user_messages = self.collection.find_one(query)
+        user_chat = self.collection.find_one(query)
+        if user_chat is None:
+            return None
 
-        return Chat(**user_messages)  # TODO: parse the result to a basemodel.
+        return Chat(**user_chat)  # TODO: parse the result to a basemodel.
 
     def create_or_update_user_messages(self, chat_messages: Chat):
         query = {"user": chat_messages.user}
-        result = self.collection.update_one(query, chat_messages, upsert=True)
+        update = {"$set": chat_messages.dict()}
+        result = self.collection.update_one(query, update, upsert=True)
 
         return result

@@ -3,6 +3,7 @@ from typing import List, Dict
 from llm_service.llm_client import LLMClient
 from llm_service.types.llm_message import LLMMessage
 from mongo.mongo_client import MongoDBClient
+from mongo.types.chat import Chat
 from mongo.types.slack_message import SlackMessage
 from slack.listeners.message.slack_message_response_params import SlackMessageResponseParams
 
@@ -21,6 +22,9 @@ class AddedMessageHandler:
     def handel_message(self, message: SlackMessageResponseParams) -> str:
         # TODO: get user messages (previous chat context)
         user_chat = self.mongo_client.get_user_chat(message.user)
+        if user_chat is None:
+            user_chat = self.create_user_chat(message)
+
         chat_messages = user_chat.messages
 
         new_message = SlackMessage(
@@ -37,7 +41,7 @@ class AddedMessageHandler:
         new_assistant_message = SlackMessage(
             role="assistant",
             content=response.content,
-            timestamp=response.created,
+            timestamp=str(response.created),
             slack_message_id=None
         )
 
@@ -61,3 +65,11 @@ class AddedMessageHandler:
             llm_messages.append(llm_message)
 
         return llm_messages
+
+    @staticmethod
+    def create_user_chat(slack_message: SlackMessageResponseParams) -> Chat:
+        return Chat(
+            user=slack_message.user,
+            messages=[],
+            chat_id=slack_message.channel
+        )
